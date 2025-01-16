@@ -1,3 +1,43 @@
+# Postgresql
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:13.18
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: fakeshop
+        - name: POSTGRES_PASSWORD
+          value: pg1234
+        - name: POSTGRES_DB
+          value: fakeshop
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432 
+---
+# Application
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,9 +54,20 @@ spec:
     spec:
       containers:
       - name: fake-shop
-        image: nsaraiva/fake-shop:v1
+        image: nsaraiva/fake-shop:v2
         ports:
         - containerPort: 5000
+        env:
+        - name: DB_HOST
+          value: postgres
+        - name: DB_USER
+          value: fakeshop
+        - name: DB_PASSWORD
+          value: pg1234
+        - name: DB_NAME
+          value: fakeshop
+        - name: FLASK_APP
+          value: index.py
 ---
 apiVersion: v1
 kind: Service
